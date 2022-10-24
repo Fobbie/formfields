@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fromfields/model/user.dart';
+import 'package:fromfields/pages/user_info_page.dart';
 
 import 'signin_page.dart';
 
@@ -13,6 +15,9 @@ class registerPage extends StatefulWidget {
 }
 
 class _registerPageState extends State<registerPage> {
+  final _nameFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passwordFocus = FocusNode();
   final TextEditingController _textcontrollerN = new TextEditingController();
   final TextEditingController _textcontrollerP = new TextEditingController();
   final TextEditingController _textcontrollerE = new TextEditingController();
@@ -23,6 +28,10 @@ class _registerPageState extends State<registerPage> {
   bool _passwordVisability = true;
   String _descriptionHideShow = "Show";
   final _formKey = GlobalKey<FormState>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  List<String> _countries = ["Ukraine", "USA", "UK", "Romania"];
+  String? _selectCountry;
+  User newUser = User();
   @override
   void dispose() {
     _textcontrollerN;
@@ -31,12 +40,22 @@ class _registerPageState extends State<registerPage> {
     _textcontrollerS.dispose();
     _textcontrollerPswr.dispose();
     _textcontrollerCPswr.dispose();
+    _nameFocus.dispose();
+    _phoneFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
+  }
+
+  void _fieldFocusChange(
+      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: const Text("Register Page"),
         centerTitle: true,
@@ -48,9 +67,15 @@ class _registerPageState extends State<registerPage> {
           padding: const EdgeInsets.all(16),
           children: [
             TextFormField(
+              onSaved: ((value) => newUser.name = value!),
+              focusNode: _nameFocus,
+              autofocus: true,
+              onFieldSubmitted: (_) =>
+                  _fieldFocusChange(context, _nameFocus, _phoneFocus),
               controller: _textcontrollerN,
               maxLength: 32,
               decoration: InputDecoration(
+                
                 labelText: "Full name *",
                 hintText: "Just ur name man",
                 prefixIcon: Icon(
@@ -72,13 +97,22 @@ class _registerPageState extends State<registerPage> {
                     borderRadius: BorderRadius.all(Radius.circular(20)),
                     borderSide: BorderSide(color: Colors.indigo, width: 2.5)),
               ),
-              validator: (String? _textcontrollerN)=> _validateName(_textcontrollerN),
+              validator: (String? _textcontrollerN) =>
+                  _validateName(_textcontrollerN),
             ),
             const SizedBox(height: 10),
             TextFormField(
+              onSaved: ((value) => newUser.phone = value!),
+              focusNode: _phoneFocus,
+              onFieldSubmitted: (_) =>
+                  _fieldFocusChange(context, _phoneFocus, _passwordFocus),
               controller: _textcontrollerP,
-              validator: (value) => _validatePhone(value!) ? null : "Phone number format 0680463178",
-              inputFormatters: [FilteringTextInputFormatter(RegExp(r'[0-9]{1,}$'), allow: true)],
+              validator: (value) => _validatePhone(value!)
+                  ? null
+                  : "Phone number format 0680463178",
+              inputFormatters: [
+                FilteringTextInputFormatter(RegExp(r'[0-9]{1,}$'), allow: true)
+              ],
               keyboardType: TextInputType.phone,
               maxLength: 10,
               decoration: InputDecoration(
@@ -134,6 +168,7 @@ class _registerPageState extends State<registerPage> {
             ),
             const SizedBox(height: 10),
             TextFormField(
+              onSaved: ((value) => newUser.story = value!),
               controller: _textcontrollerS,
               maxLength: 132,
               maxLines: 3,
@@ -146,8 +181,34 @@ class _registerPageState extends State<registerPage> {
                 helperText: "Please not long text",
               ),
             ),
+            const SizedBox(height: 15),
+            DropdownButtonFormField(
+              // onSaved: ((value) => newUser.country = value!),
+              value: _selectCountry,
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.map,
+                  color: Colors.indigo,
+                ),
+                border: OutlineInputBorder(),
+                // icon: Icon(Icons.map),
+                labelText: "Country",
+              ),
+              items: _countries
+                  .map((country) => DropdownMenuItem(
+                        child: Text(country),
+                        value: country,
+                      ))
+                  .toList(),
+              onChanged: (country) => setState(() {
+                newUser.country = country!;
+                _selectCountry = country;
+              }),
+            ),
             const SizedBox(height: 10),
             TextFormField(
+              focusNode: _passwordFocus,
+              // onFieldSubmitted: (_) => _fieldFocusChange(context, _passwordFocus, _phoneFocus),
               controller: _textcontrollerPswr,
               obscureText: _passwordVisability,
               validator: (value) {
@@ -249,19 +310,18 @@ class _registerPageState extends State<registerPage> {
     );
   }
 
-  String? _validateName(value){
+  String? _validateName(value) {
     final _pattern = RegExp(r'[A-Za-z ]+$');
-    if(value.isEmpty){
+    if (value.isEmpty) {
       return "Name is empty";
-    }else if(!_pattern.hasMatch(value)){
+    } else if (!_pattern.hasMatch(value)) {
       return "Alphabet value";
-    }else{
+    } else {
       return null;
     }
   }
 
-
-  bool _validatePhone(String input){
+  bool _validatePhone(String input) {
     final pattern = RegExp(r'\d\d\d\d\d\d\d\d\d\d$');
     return pattern.hasMatch(input);
   }
@@ -281,12 +341,47 @@ class _registerPageState extends State<registerPage> {
   }
 
   void _submitConfirm() {
+
     if (_formKey.currentState!.validate()) {
+      _formKey.currentState?.save();
+      _showDialog(name: _textcontrollerN.text);
       print("Form is valid");
       print("""Name: ${_textcontrollerN.text}
 Phone: ${_textcontrollerP.text}
 Email: ${_textcontrollerE.text}
 Story: ${_textcontrollerS.text}""");
+    } else {
+      _showMessage(message: "Form is not valid");
     }
+  }
+
+  void _showMessage({String? message}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: Duration(seconds: 4),
+      content: Text(
+        textAlign: TextAlign.center,
+        message!,
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: Colors.red,
+    ));
+  }
+
+  void _showDialog({String? name}) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: Text("Registration suc"),
+              content: Text("$name is now verified register form"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: ((context) => UserInfoPage(userInfo: newUser,))));
+                  },
+                  child: Text("Ok"),
+                )
+              ],
+            ));
   }
 }
