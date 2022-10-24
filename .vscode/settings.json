@@ -5,14 +5,7 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/Thumbs.db": true,
-        "test": true,
-        "macos": true,
-        "linux": true
+        "**/Thumbs.db": true
     },
-    "hide-files.files": [
-        "test",
-        "macos",
-        "linux"
-    ]
+    "hide-files.files": []
 }
