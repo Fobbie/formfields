@@ -6,9 +6,13 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
-        "test": true
+        "test": true,
+        "macos": true,
+        "linux": true
     },
     "hide-files.files": [
-        "test"
+        "test",
+        "macos",
+        "linux"
     ]
 }
